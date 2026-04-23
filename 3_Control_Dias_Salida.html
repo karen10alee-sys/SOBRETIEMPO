@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Control de Días de Salida · Panorama BPO</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --red:#C0392B;--red-light:#fdf2f1;--red-mid:#e8b4b0;
+    --green:#1a7a4a;--green-light:#f0faf4;
+    --amber:#b45309;--amber-light:#fffbeb;
+    --blue:#1d4ed8;--blue-light:#eff6ff;
+    --gray:#64748b;--gray-light:#f8fafc;--gray-border:#e2e8f0;
+    --text:#1e293b;--text2:#64748b;
+    --white:#fff;--radius:10px;--shadow:0 1px 3px rgba(0,0,0,.08);
+  }
+  body{font-family:'DM Sans',sans-serif;background:#f1f5f9;color:var(--text);min-height:100vh}
+  header{background:var(--white);border-bottom:1px solid var(--gray-border);padding:1rem 1.5rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;position:sticky;top:0;z-index:10}
+  .logo{background:var(--red);color:white;font-size:11px;font-weight:600;padding:4px 8px;border-radius:5px;letter-spacing:.05em}
+  .hl{display:flex;align-items:center;gap:10px}
+  .ht{font-size:14px;font-weight:600}
+  .hs{font-size:11px;color:var(--text2)}
+  .btn{padding:6px 12px;font-size:12px;font-weight:500;border:1px solid var(--gray-border);border-radius:7px;background:var(--white);cursor:pointer;font-family:'DM Sans',sans-serif;color:var(--text)}
+  .btn:hover{background:var(--gray-light)}
+  .btn-red{background:var(--red);color:white;border-color:var(--red)}
+  .btn-red:hover{background:#a93226}
+  select{font-family:'DM Sans',sans-serif;font-size:12px;padding:6px 10px;border:1px solid var(--gray-border);border-radius:7px;background:var(--white);color:var(--text)}
+  main{max-width:1000px;margin:0 auto;padding:1.5rem 1rem}
+  .tabs{display:flex;border-bottom:1px solid var(--gray-border);margin-bottom:1.25rem;overflow-x:auto}
+  .tab{padding:8px 16px;font-size:12px;font-weight:500;cursor:pointer;border:none;background:transparent;color:var(--text2);border-bottom:2px solid transparent;margin-bottom:-1px;font-family:'DM Sans',sans-serif;white-space:nowrap}
+  .tab.active{color:var(--red);border-bottom:2px solid var(--red)}
+  .sec{display:none}.sec.active{display:block}
+  .card{background:var(--white);border:1px solid var(--gray-border);border-radius:var(--radius);padding:1.1rem 1.25rem;margin-bottom:1rem;box-shadow:var(--shadow)}
+  /* Semana */
+  .wgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:1rem}
+  .wday{background:var(--white);border:1px solid var(--gray-border);border-radius:var(--radius);padding:.85rem;min-height:110px}
+  .wday.hoy{border-color:var(--red);background:var(--red-light)}
+  .wname{font-size:10px;font-weight:600;text-transform:uppercase;color:var(--text2);letter-spacing:.04em}
+  .wnum{font-size:18px;font-weight:600;margin:.1rem 0 .5rem}
+  .wday.hoy .wnum{color:var(--red)}
+  .wchip{font-size:10px;border-radius:4px;padding:2px 6px;margin-bottom:3px;display:block;font-weight:500}
+  .wc-comp{background:var(--green-light);color:var(--green)}
+  .wc-ot{background:var(--amber-light);color:var(--amber)}
+  /* Calendario */
+  .cgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+  .chdr{text-align:center;font-size:10px;font-weight:600;color:var(--text2);padding:4px;text-transform:uppercase}
+  .ccell{min-height:80px;border:1px solid var(--gray-border);border-radius:6px;padding:4px;background:var(--white)}
+  .ccell.hoy{border-color:var(--red);background:var(--red-light)}
+  .ccell.other{opacity:.3;background:var(--gray-light)}
+  .ccell.has-comp{border-color:#86efac;background:var(--green-light)}
+  .ccell.has-ot{border-color:#fcd34d}
+  .cnum{font-size:10px;font-weight:600;color:var(--text2);margin-bottom:2px}
+  .ccell.hoy .cnum{color:var(--red);font-weight:700}
+  .cev{font-size:9px;border-radius:3px;padding:1px 3px;margin-bottom:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
+  .ev-c{background:#dcfce7;color:#166534}
+  .ev-o{background:#fef9c3;color:#854d0e}
+  /* Ausencias */
+  .aus-item{background:var(--white);border:1px solid var(--gray-border);border-radius:var(--radius);padding:.9rem 1.1rem;margin-bottom:.6rem;box-shadow:var(--shadow)}
+  .aus-hdr{font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;margin-bottom:.5rem}
+  .badge-n{background:var(--red-light);color:var(--red);font-size:10px;font-weight:700;padding:2px 7px;border-radius:5px}
+  .badge-ap{background:#fdf2f1;color:#C0392B;font-size:10px;font-weight:700;padding:2px 7px;border-radius:5px;border:1px solid #e8b4b0}
+  .chips{display:flex;flex-wrap:wrap;gap:5px}
+  .chip{background:var(--green-light);border:1px solid #86efac;border-radius:6px;padding:3px 9px;font-size:11px;color:var(--green);font-weight:500}
+  /* PDF / Formatos */
+  .pdf-selector{display:flex;gap:8px;align-items:center;margin-bottom:1rem;flex-wrap:wrap}
+  .formato-box{background:var(--white);border:1.5px solid var(--gray-border);border-radius:var(--radius);padding:1.5rem;font-size:13px;line-height:2;max-width:680px;margin:0 auto}
+  .fmt-titulo{font-size:11px;font-weight:700;color:var(--red);letter-spacing:.06em;margin-bottom:1rem;text-transform:uppercase}
+  .fmt-row{display:flex;border-bottom:1px solid var(--gray-border);padding:3px 0;gap:12px}
+  .fmt-k{color:var(--text2);min-width:180px;font-size:12px}
+  .fmt-v{font-weight:600;font-size:12px}
+  .fmt-table{width:100%;border-collapse:collapse;margin:8px 0;font-size:12px}
+  .fmt-table th{border:1px solid var(--gray-border);padding:5px 8px;background:var(--gray-light);font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase}
+  .fmt-table td{border:1px solid var(--gray-border);padding:5px 8px}
+  .fmt-legal{font-size:11px;color:var(--text2);line-height:1.7;margin:.9rem 0}
+  .firma-row{display:flex;justify-content:space-between;margin-top:2rem;font-size:11px}
+  .firma{text-align:center;width:160px}
+  .firma-line{border-top:1px solid var(--text2);padding-top:4px;color:var(--text2)}
+  .empty{text-align:center;padding:2rem;color:var(--text2);font-size:13px}
+  .legend{display:flex;gap:12px;align-items:center;margin-bottom:.9rem;flex-wrap:wrap}
+  .ldot{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+  .li{font-size:11px;color:var(--text2);display:flex;align-items:center;gap:4px}
+  @media print{
+    header,.tabs,.pdf-selector,.btn,footer{display:none!important}
+    body{background:white}
+    main{padding:0;max-width:100%}
+    .formato-box{border:none;padding:.5rem;max-width:100%}
+    .sec{display:block!important}
+    .sec:not(#sec-pdf){display:none!important}
+  }
+  footer{text-align:center;padding:2rem;font-size:11px;color:var(--text2)}
+</style>
+</head>
+<body>
+<header>
+  <div class="hl">
+    <div class="logo">PAN</div>
+    <div><div class="ht">Control de Días de Salida</div><div class="hs">Panorama BPO · Ausencias por compensación · Jornada 8:30AM–7PM = 9.5h netas · Sobretiempo desde 8:00PM</div></div>
+  </div>
+  <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+    <button class="btn" onclick="renderAll()">↻ Actualizar</button>
+    <button class="btn btn-red" onclick="irPDF()">📄 Generar formato RRHH</button>
+    <button class="btn" onclick="window.print()">🖨 Imprimir</button>
+  </div>
+</header>
+<main>
+<div class="tabs">
+  <button class="tab active" onclick="showTab('semana')">Esta semana</button>
+  <button class="tab" onclick="showTab('cal')">Calendario</button>
+  <button class="tab" onclick="showTab('lista')">Lista ausencias</button>
+  <button class="tab" onclick="showTab('pdf')">Formato RRHH (PDF)</button>
+</div>
+
+<!-- SEMANA -->
+<div class="sec active" id="sec-semana">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.9rem;flex-wrap:wrap;gap:6px">
+    <div style="font-size:13px;font-weight:600" id="sem-titulo"></div>
+    <div style="display:flex;gap:5px">
+      <button class="btn" onclick="semOff--;renderSemana()">← Anterior</button>
+      <button class="btn" onclick="semOff=0;renderSemana()">Hoy</button>
+      <button class="btn" onclick="semOff++;renderSemana()">Siguiente →</button>
+    </div>
+  </div>
+  <div class="legend">
+    <div class="li"><div class="ldot" style="background:#dcfce7;border:1px solid #86efac"></div>Compensación (ausente)</div>
+    <div class="li"><div class="ldot" style="background:#fef9c3;border:1px solid #fcd34d"></div>Sobretiempo</div>
+  </div>
+  <div class="wgrid" id="wgrid"></div>
+  <div id="sem-alert"></div>
+</div>
+
+<!-- CALENDARIO -->
+<div class="sec" id="sec-cal">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem">
+    <button class="btn" onclick="cM--;if(cM<0){cM=11;cY--;}renderCal()">←</button>
+    <div style="font-size:14px;font-weight:600;text-transform:capitalize" id="cal-titulo"></div>
+    <button class="btn" onclick="cM++;if(cM>11){cM=0;cY++;}renderCal()">→</button>
+  </div>
+  <div class="legend">
+    <div class="li"><div class="ldot" style="background:#dcfce7;border:1px solid #86efac"></div>Compensación</div>
+    <div class="li"><div class="ldot" style="background:#fef9c3;border:1px solid #fcd34d"></div>Sobretiempo</div>
+  </div>
+  <div class="cgrid" id="cgrid"></div>
+</div>
+
+<!-- LISTA -->
+<div class="sec" id="sec-lista">
+  <div style="display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap;align-items:center">
+    <select id="fil-tipo" onchange="renderLista()">
+      <option value="comp">Solo compensaciones (ausencias)</option>
+      <option value="ot">Solo sobretiempos</option>
+      <option value="all">Todos</option>
+    </select>
+    <select id="fil-mes" onchange="renderLista()">
+      <option value="">Todos los periodos</option>
+      <option value="4-2026">Abril 2026</option><option value="3-2026">Marzo 2026</option>
+      <option value="5-2026">Mayo 2026</option>
+    </select>
+    <select id="fil-per" onchange="renderLista()"><option value="">Todas las personas</option></select>
+  </div>
+  <div id="lista-cont"></div>
+</div>
+
+<!-- FORMATO RRHH PDF -->
+<div class="sec" id="sec-pdf">
+  <div class="pdf-selector">
+    <select id="sel-fmt" onchange="renderFmt()">
+      <option value="">— Seleccionar colaborador —</option>
+    </select>
+    <select id="sel-tipo-fmt" onchange="renderFmt()">
+      <option value="02">PAN-FO-CON-02 (Compensación)</option>
+      <option value="01">PAN-FO-CON-01 (Sobretiempo)</option>
+    </select>
+    <button class="btn btn-red" onclick="window.print()">🖨 Imprimir / Guardar PDF</button>
+  </div>
+  <div id="fmt-doc"></div>
+</div>
+</main>
+<footer>Panorama BPO · Control de Ausencias · Auto-refresh 20s</footer>
+
+<script>
+const API_URL='https://script.google.com/macros/s/AKfycbzyt0FpqxvCcjgPzA8mv8z0vwKewwrxzQUh3EvEoQ75DEgkl-LNP61STkcq8FMfXFxq/exec';
+let semOff=0,cM=new Date().getMonth(),cY=new Date().getFullYear();
+const LS_KEY='panorama_sobretiempo_v1';
+function _lsLoad(){try{return JSON.parse(localStorage.getItem(LS_KEY)||'[]');}catch{return[];}}
+function load(cb){
+  fetch(API_URL,{redirect:'follow'}).then(r=>r.text()).then(t=>{
+    try{
+      const d=JSON.parse(t);
+      if(Array.isArray(d)&&d.length>0){localStorage.setItem(LS_KEY,JSON.stringify(d));cb(d);}
+      else cb(_lsLoad());
+    }catch(e){cb(_lsLoad());}
+  }).catch(()=>cb(_lsLoad()));
+}
+function save(d,cb){
+  localStorage.setItem(LS_KEY,JSON.stringify(d));
+  if(cb)cb();
+  fetch(API_URL,{method:'POST',redirect:'follow',headers:{'Content-Type':'text/plain'},body:JSON.stringify(d)}).catch(()=>{});
+}
+
+function fD(iso){if(!iso)return'';const[y,m,d]=iso.split('-');return`${d}/${m}/${y}`;}
+function isoHoy(){return new Date().toISOString().split('T')[0];}
+
+function buildMaps(data){
+  const otMap={},compMap={};
+  data.forEach(r=>{
+    r.dias.forEach(d=>{
+      if(d.hv>0){if(!otMap[d.fecha])otMap[d.fecha]=[];otMap[d.fecha].push({nombre:r.nombre,hsalida:d.hsalida,hv:d.hv});}
+    });
+    r.comps.forEach(c=>{
+      if(!compMap[c.fecha])compMap[c.fecha]=[];
+      compMap[c.fecha].push({nombre:r.nombre,hini:c.hini,hfin:c.hfin,horas:c.horas,cargo:r.cargo});
+    });
+  });
+  return{otMap,compMap};
+}
+
+function showTab(t){
+  const ids=['semana','cal','lista','pdf'];
+  document.querySelectorAll('.tab').forEach((b,i)=>b.classList.toggle('active',ids[i]===t));
+  document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active'));
+  document.getElementById('sec-'+t).classList.add('active');
+  if(t==='semana')renderSemana();
+  if(t==='cal')renderCal();
+  if(t==='lista')renderLista();
+  if(t==='pdf')renderFmtSetup();
+}
+
+function getLunes(off){
+  const h=new Date();
+  const dow=h.getDay()===0?6:h.getDay()-1;
+  const l=new Date(h);l.setDate(h.getDate()-dow+off*7);
+  return l;
+}
+
+function renderSemana(){
+  load(function(data){
+  const{otMap,compMap}=buildMaps(data);
+  const lunes=getLunes(semOff);
+  const vie=new Date(lunes);vie.setDate(lunes.getDate()+4);
+  const names=['Lunes','Martes','Miércoles','Jueves','Viernes'];
+  const hoy=isoHoy();
+  document.getElementById('sem-titulo').textContent=
+    `Semana del ${lunes.toLocaleDateString('es-PE',{day:'numeric',month:'long'})} al ${vie.toLocaleDateString('es-PE',{day:'numeric',month:'long',year:'numeric'})}`;
+  let html='',alertas=[];
+  for(let i=0;i<5;i++){
+    const d=new Date(lunes);d.setDate(lunes.getDate()+i);
+    const iso=d.toISOString().split('T')[0];
+    const esH=iso===hoy;
+    const ots=otMap[iso]||[],comps=compMap[iso]||[];
+    if(comps.length)alertas.push({iso,dia:names[i],comps});
+    html+=`<div class="wday ${esH?'hoy':''}">
+      <div class="wname">${names[i]}</div>
+      <div class="wnum">${d.getDate()}</div>
+      ${comps.map(c=>`<span class="wchip wc-comp">${c.nombre.split(' ')[0]} comp.</span>`).join('')}
+      ${ots.map(o=>`<span class="wchip wc-ot">${o.nombre.split(' ')[0]} OT</span>`).join('')}
+    </div>`;
+  }
+  document.getElementById('wgrid').innerHTML=html;
+  const al=document.getElementById('sem-alert');
+  al.innerHTML=alertas.length?alertas.map(a=>`
+    <div style="background:var(--green-light);border:1px solid #86efac;border-radius:8px;padding:.7rem 1rem;margin-bottom:5px;font-size:12px">
+      <strong>${a.dia} ${fD(a.iso)}</strong> — Ausentes por compensación: 
+      ${a.comps.map(c=>`<strong>${c.nombre.split(' ').slice(0,2).join(' ')}</strong> (${c.hini}–${c.hfin})`).join(', ')}
+    </div>`).join('')
+    :'<div style="background:var(--gray-light);border:1px solid var(--gray-border);border-radius:8px;padding:.7rem 1rem;font-size:12px;color:var(--text2)">Sin ausencias esta semana.</div>';
+  });
+}
+
+function renderCal(){
+  load(function(data){
+  const{otMap,compMap}=buildMaps(data);
+  const hoy=isoHoy();
+  const prim=new Date(cY,cM,1);
+  const ult=new Date(cY,cM+1,0).getDate();
+  const ini=prim.getDay()===0?6:prim.getDay()-1;
+  const meses=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Setiembre','Octubre','Noviembre','Diciembre'];
+  document.getElementById('cal-titulo').textContent=`${meses[cM]} ${cY}`;
+  const dias=['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
+  let html=dias.map(d=>`<div class="chdr">${d}</div>`).join('');
+  for(let i=0;i<ini;i++)html+=`<div class="ccell other"></div>`;
+  for(let d=1;d<=ult;d++){
+    const iso=`${cY}-${String(cM+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const esH=iso===hoy;
+    const ots=otMap[iso]||[],comps=compMap[iso]||[];
+    const cls=esH?'hoy':comps.length?'has-comp':ots.length?'has-ot':'';
+    html+=`<div class="ccell ${cls}">
+      <div class="cnum">${d}</div>
+      ${comps.map(c=>`<div class="cev ev-c">${c.nombre.split(' ')[0]} comp.</div>`).join('')}
+      ${ots.map(o=>`<div class="cev ev-o">OT: ${o.nombre.split(' ')[0]}</div>`).join('')}
+    </div>`;
+  }
+  document.getElementById('cgrid').innerHTML=html;
+  });
+}
+
+function renderLista(){
+  load(function(data){
+  const{otMap,compMap}=buildMaps(data);
+  const tipo=document.getElementById('fil-tipo').value;
+  const mesF=document.getElementById('fil-mes').value;
+  const perF=document.getElementById('fil-per').value;
+  const pers=[...new Set(data.map(r=>r.nombre))];
+  const sp=document.getElementById('fil-per');const pv=sp.value;
+  sp.innerHTML='<option value="">Todas las personas</option>'+pers.map(p=>`<option value="${p}">${p}</option>`).join('');
+  if(pv)sp.value=pv;
+  const allF=new Set([
+    ...(tipo!=='comp'?Object.keys(otMap):[]),
+    ...(tipo!=='ot'?Object.keys(compMap):[])
+  ]);
+  // Filtrar por mes si aplica
+  const fecFiltradas=[...allF].filter(f=>{
+    if(!mesF)return true;
+    const[y,m]=f.split('-');
+    const[fm,fy]=mesF.split('-');
+    return parseInt(m)===parseInt(fm)&&parseInt(y)===parseInt(fy);
+  }).sort();
+  const el=document.getElementById('lista-cont');
+  if(!fecFiltradas.length){el.innerHTML='<div class="empty">Sin registros para este filtro.</div>';return;}
+  el.innerHTML=fecFiltradas.map(fecha=>{
+    const comps=(compMap[fecha]||[]).filter(c=>!perF||c.nombre===perF);
+    const ots=(otMap[fecha]||[]).filter(o=>!perF||o.nombre===perF);
+    if(!comps.length&&!ots.length)return'';
+    const[y,m,d]=fecha.split('-');
+    const fobj=new Date(parseInt(y),parseInt(m)-1,parseInt(d));
+    const nomDia=fobj.toLocaleDateString('es-PE',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+    let inner='';
+    if(comps.length&&tipo!=='ot'){
+      inner+=`<div style="font-size:11px;font-weight:600;color:var(--green);margin-bottom:4px">COMPENSACIONES — ausentes</div>
+        <div class="chips">${comps.map(c=>`<span class="chip">${c.nombre.split(' ').slice(0,2).join(' ')} · ${c.hini}–${c.hfin} (${c.horas}h)</span>`).join('')}</div>`;
+    }
+    if(ots.length&&tipo!=='comp'){
+      inner+=`<div style="font-size:11px;font-weight:600;color:var(--amber);margin-top:${comps.length?'8px':'0'};margin-bottom:4px">SOBRETIEMPOS</div>
+        <div class="chips">${ots.map(o=>`<span class="chip" style="background:var(--amber-light);border-color:#fcd34d;color:var(--amber)">${o.nombre.split(' ').slice(0,2).join(' ')} · sal. ${o.hsalida} (+${o.hv.toFixed(1)}h)</span>`).join('')}</div>`;
+    }
+    if(!inner)return'';
+    return`<div class="aus-item">
+      <div class="aus-hdr">${nomDia.charAt(0).toUpperCase()+nomDia.slice(1)}<span class="badge-n">${comps.length+ots.length} pers.</span></div>
+      ${inner}
+    </div>`;
+  }).join('');
+  });
+}
+
+function renderFmtSetup(){
+  load(function(regs){
+    const s=document.getElementById('sel-fmt');
+    const prev=s.value;
+    s.innerHTML='<option value="">— Seleccionar colaborador —</option>'+regs.map(r=>{
+      const aprobado = r.estado==='aprobado'||r.estado==='compensado';
+      const lbl = aprobado ? '✓' : '⏳';
+      return `<option value="${r.id}">${lbl} ${r.nombre} (${mesLabelFull(r.mes)})${aprobado?'':' — Pend. aprobación'}</option>`;
+    }).join('');
+    if(prev)s.value=prev;
+    renderFmt();
+  });
+}
+
+function mesLabelFull(k){const ms=['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Setiembre','Octubre','Noviembre','Diciembre'];const[m,y]=k.split('-');return`${ms[parseInt(m)]} ${y}`;}
+
+function renderFmt(){
+  const id=document.getElementById('sel-fmt').value;
+  const tipo=document.getElementById('sel-tipo-fmt').value;
+  const el=document.getElementById('fmt-doc');
+  if(!id){el.innerHTML='<div class="empty">Selecciona un colaborador para generar el formato.</div>';return;}
+  load(function(regs){
+    const r=regs.find(x=>String(x.id)===String(id));
+    if(!r){el.innerHTML='';return;}
+    if(r.estado==='aprobacion_pendiente'||r.estado==='pendiente'){
+      el.innerHTML=`<div style="background:#fdf2f1;border:1.5px solid #e8b4b0;border-radius:10px;padding:2rem;text-align:center;color:#C0392B;max-width:680px;margin:0 auto">
+        <div style="font-size:28px;margin-bottom:.75rem">🔐</div>
+        <div style="font-size:14px;font-weight:700;margin-bottom:.5rem">Formato bloqueado — Aprobación pendiente</div>
+        <div style="font-size:12px;color:#7f1d1d;line-height:1.7">
+          El registro de <strong>${r.nombre}</strong> aún no ha sido aprobado por la Gerencia.<br>
+          El jefe debe aprobar el registro desde el <strong>Panel de Control de Equipo</strong><br>antes de poder generar este documento.
+        </div>
+      </div>`;
+      return;
+    }
+    if(tipo==='02')el.innerHTML=renderCON02(r);
+    else el.innerHTML=renderCON01(r);
+  });
+}
+
+function renderCON02(r){
+  const totalComp=r.comps.reduce((a,c)=>a+c.horas,0).toFixed(2);
+  const fechasOT=r.dias.map(d=>d.fecha.substring(8)).join('/')+ ' – ' +r.dias[0]?.fecha.substring(5,7)+'-'+r.dias[0]?.fecha.substring(0,4);
+  const compRows=r.comps.map(c=>`
+    <tr><td>${fD(c.fecha)}</td><td style="font-family:'DM Mono',monospace;text-align:center">${c.horas.toFixed(2)} HORAS</td><td style="font-family:'DM Mono',monospace;text-align:center">(${c.hini} – ${c.hfin})</td></tr>`).join('');
+  return`<div class="formato-box" id="fmt-print">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;border:1px solid var(--gray-border);margin-bottom:1rem;border-radius:6px;overflow:hidden">
+      <div style="background:var(--red);color:white;padding:.75rem 1.25rem;font-size:16px;font-weight:700;display:flex;align-items:center;gap:6px;min-width:120px">
+        <span>●</span> Panorama<br><span style="font-size:10px;font-weight:400">bpo</span>
+      </div>
+      <div style="flex:1;text-align:center;padding:.6rem;border-left:1px solid var(--gray-border);border-right:1px solid var(--gray-border)">
+        <div style="font-size:12px;font-weight:700;text-transform:uppercase">Registro de Control de</div>
+        <div style="font-size:12px;font-weight:700;text-transform:uppercase">Compensacion de Sobretiempo</div>
+      </div>
+      <div style="padding:.5rem .9rem;font-size:10px;line-height:1.8;min-width:130px">
+        <div><strong>Código:</strong> PAN-FO-CON-02</div>
+        <div><strong>Versión:</strong> 00</div>
+        <div><strong>Página:</strong> 1 de 1</div>
+      </div>
+    </div>
+    <div class="fmt-row"><span class="fmt-k"><strong>NOMBRES Y APELLIDOS:</strong></span><span class="fmt-v">${r.nombre}</span></div>
+    <div class="fmt-row"><span class="fmt-k"><strong>RAZÓN SOCIAL:</strong></span><span class="fmt-v">${r.razon||'Tandem S.A.C.'}</span></div>
+    <div class="fmt-row"><span class="fmt-k"><strong>GERENCIA:</strong></span><span class="fmt-v">${r.area}</span><span class="fmt-k" style="margin-left:20px"><strong>FECHA:</strong></span><span class="fmt-v">${r.fechaEmision}</span></div>
+    <div class="fmt-row"><span class="fmt-k"><strong>CARGO:</strong></span><span class="fmt-v">${r.cargo}</span></div>
+    <div class="fmt-row"><span class="fmt-k"><strong>HORAS A COMPENSAR:</strong></span><span class="fmt-v">${totalComp} HORAS</span></div>
+    <div style="margin:.75rem 0 .4rem;font-size:12px"><strong>FECHA Y HORA DE COMPENSACION:</strong></div>
+    <table class="fmt-table">
+      <thead><tr><th>Fecha</th><th>Horas a compensar</th><th>Horario</th></tr></thead>
+      <tbody>${compRows}</tbody>
+    </table>
+    <div class="fmt-legal">
+      Por medio del presente el Empleador y el Trabajador identificado en este documento y de conformidad a lo estipulado por el artículo 26° del D.S. N° 008-2002-TR, en compensar las horas sobretiempo por descanso efectivo, conforme al detalle precedente.<br><br>
+      Conformes las partes suscriben por duplicado con igual tenor y valor el presente documento.
+    </div>
+    <div class="firma-row">
+      <div class="firma"><div style="height:40px"></div><div class="firma-line">JEFE INMEDIATO</div></div>
+      <div class="firma"><div style="height:40px"></div><div class="firma-line">TRABAJADOR</div></div>
+    </div>
+  </div>`;
+}
+
+function renderCON01(r){
+  const fechasStr=r.dias.map(d=>d.fecha.substring(8)).join('/')+ ' – ' +r.dias[0]?.fecha.substring(5,7)+'-'+r.dias[0]?.fecha.substring(0,4);
+  const diasRows=r.dias.map(d=>`
+    <tr>
+      <td>${fD(d.fecha)}</td>
+      <td style="text-align:center;font-family:'DM Mono',monospace">${d.hsalida}</td>
+      <td style="text-align:center;font-family:'DM Mono',monospace;color:${d.hv>0?'var(--green)':'var(--red)'}">${d.hv>0?'+'+d.hv.toFixed(2)+'h':'No aplica'}</td>
+    </tr>`).join('');
+  const compRows=r.comps.map(c=>`
+    <tr><td>${fD(c.fecha)}</td><td style="text-align:center;font-family:'DM Mono',monospace">${c.hini}–${c.hfin}</td><td style="text-align:center;font-family:'DM Mono',monospace">${c.horas}h</td></tr>`).join('');
+  return`<div class="formato-box" id="fmt-print">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;border:1px solid var(--gray-border);margin-bottom:1rem;border-radius:6px;overflow:hidden">
+      <div style="background:var(--red);color:white;padding:.75rem 1.25rem;font-size:16px;font-weight:700;display:flex;align-items:center;gap:6px;min-width:120px">
+        <span>●</span> Panorama<br><span style="font-size:10px;font-weight:400">bpo</span>
+      </div>
+      <div style="flex:1;text-align:center;padding:.6rem;border-left:1px solid var(--gray-border);border-right:1px solid var(--gray-border)">
+        <div style="font-size:12px;font-weight:700;text-transform:uppercase">Registro y Control de Sobretiempo</div>
+      </div>
+      <div style="padding:.5rem .9rem;font-size:10px;line-height:1.8;min-width:130px">
+        <div><strong>Código:</strong> PAN-FO-CON-01</div>
+        <div><strong>Versión:</strong> 00</div>
+        <div><strong>Página:</strong> 1 de 1</div>
+      </div>
+    </div>
+    <div class="fmt-row"><span class="fmt-k"><strong>NOMBRES Y APELLIDOS:</strong></span><span class="fmt-v">${r.nombre}</span><span class="fmt-k" style="margin-left:12px"><strong>DNI N°:</strong></span><span class="fmt-v">${r.dni||'……………'}</span></div>
+    <div class="fmt-row"><span class="fmt-k"><strong>RAZÓN SOCIAL:</strong></span><span class="fmt-v">${r.razon||'Tandem S.A.C.'}</span></div>
+    <div class="fmt-row"><span class="fmt-k"><strong>GERENCIA:</strong></span><span class="fmt-v">${r.area}</span><span class="fmt-k" style="margin-left:12px"><strong>FECHA:</strong></span><span class="fmt-v">${r.fechaEmision}</span></div>
+    <div class="fmt-row"><span class="fmt-k"><strong>CARGO:</strong></span><span class="fmt-v">${r.cargo}</span></div>
+    <div class="fmt-row"><span class="fmt-k"><strong>SOBRETIEMPO:</strong></span><span class="fmt-v">${r.horasValidas.toFixed(2)} HORAS</span></div>
+    <div style="margin:.75rem 0 .4rem;font-size:12px;font-weight:700">HORARIO DE SOBRETIEMPO (Detalle por día):</div>
+    <table class="fmt-table">
+      <thead><tr><th>Fecha</th><th>H. salida</th><th>H. válidas (desde 7:00 PM)</th></tr></thead>
+      <tbody>${diasRows}</tbody>
+    </table>
+    <div style="margin:.75rem 0 .4rem;font-size:12px;font-weight:700">MOTIVO DE SOBRETIEMPO:</div>
+    <div style="font-size:12px;margin-bottom:.75rem">${r.motivo}</div>
+    <div style="margin:.75rem 0 .4rem;font-size:12px;font-weight:700">COMPENSACIONES PROGRAMADAS:</div>
+    <table class="fmt-table">
+      <thead><tr><th>Fecha</th><th>Horario</th><th>Horas</th></tr></thead>
+      <tbody>${compRows}</tbody>
+    </table>
+    <div style="font-size:11px;margin:.75rem 0;color:var(--text2)">Modalidad: <strong>Compensado por descanso efectivo ✓</strong></div>
+    <div class="fmt-legal">
+      Por medio del presente, el Empleador y el Trabajador identificado en este documento, acuerdan la realización de sobretiempo, conforme a lo estipulado por el artículo 09° y 10° del TUO de la Ley de Jornada de Trabajo aprobado por D.S. N° 007-2002-TR.<br><br>
+      Conformes las partes suscriben por duplicado con igual tenor y valor el presente documento.
+    </div>
+    <div class="firma-row">
+      <div class="firma"><div style="height:40px"></div><div class="firma-line">JEFE INMEDIATO</div></div>
+      <div class="firma"><div style="height:40px"></div><div class="firma-line">TRABAJADOR</div></div>
+    </div>
+  </div>`;
+}
+
+function irPDF(){showTab('pdf');setTimeout(renderFmtSetup,50);}
+function renderAll(){const a=document.querySelector('.tab.active');if(a)a.click();}
+
+renderSemana();
+setInterval(renderAll,20000);
+</script>
+</body>
+</html>

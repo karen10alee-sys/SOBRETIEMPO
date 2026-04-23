@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Registro de Sobretiempo · Panorama BPO</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --red:#C0392B;--red-light:#fdf2f1;--red-mid:#e8b4b0;
+    --green:#1a7a4a;--green-light:#f0faf4;
+    --amber:#b45309;--amber-light:#fffbeb;
+    --gray-light:#f8fafc;--gray-border:#e2e8f0;
+    --text:#1e293b;--text2:#64748b;
+    --white:#fff;--radius:10px;--shadow:0 1px 3px rgba(0,0,0,.08);
+  }
+  body{font-family:'DM Sans',sans-serif;background:#f1f5f9;color:var(--text);min-height:100vh}
+  header{background:var(--white);border-bottom:1px solid var(--gray-border);padding:1rem 1.5rem;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10}
+  .logo{background:var(--red);color:white;font-size:11px;font-weight:600;padding:4px 8px;border-radius:5px;letter-spacing:.05em}
+  .header-title{font-size:14px;font-weight:600}
+  .header-sub{font-size:11px;color:var(--text2)}
+  main{max-width:700px;margin:0 auto;padding:1.5rem 1rem}
+  .rule-banner{background:var(--amber-light);border:1px solid #fcd34d;border-radius:var(--radius);padding:.75rem 1rem;display:flex;gap:8px;align-items:flex-start;margin-bottom:1.5rem;font-size:12px;color:var(--amber)}
+  .card{background:var(--white);border:1px solid var(--gray-border);border-radius:var(--radius);padding:1.25rem;margin-bottom:1rem;box-shadow:var(--shadow)}
+  .card-title{font-size:13px;font-weight:600;margin-bottom:1rem;display:flex;align-items:center;gap:6px}
+  .num{background:var(--red);color:white;width:20px;height:20px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0}
+  .fg{display:flex;flex-direction:column;gap:4px;margin-bottom:.9rem}
+  .fg label{font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.04em}
+  input,select,textarea{font-family:'DM Sans',sans-serif;font-size:13px;padding:8px 10px;border:1px solid var(--gray-border);border-radius:7px;color:var(--text);width:100%;background:var(--white)}
+  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--red)}
+  textarea{resize:vertical;min-height:56px}
+  .g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .dia-row{display:grid;grid-template-columns:155px 115px 1fr 36px;gap:8px;align-items:end;margin-bottom:8px;background:var(--gray-light);border-radius:8px;padding:8px 10px;border:1px solid var(--gray-border)}
+  .dia-row.oculto{display:none}
+  .comp-row{display:grid;grid-template-columns:155px 85px 85px 75px 36px;gap:8px;align-items:end;margin-bottom:8px;background:#f0faf4;border-radius:8px;padding:8px 10px;border:1px solid #86efac}
+  .comp-row.oculto{display:none}
+  .hauto{font-family:'DM Mono',monospace;font-size:11px;padding:8px 10px;border-radius:7px;background:var(--gray-light);border:1px solid var(--gray-border);color:var(--text2);min-height:37px;display:flex;align-items:center}
+  .hauto.ok{background:var(--green-light);color:var(--green);border-color:#86efac}
+  .hauto.no{background:var(--red-light);color:var(--red);border-color:var(--red-mid)}
+  .btn{padding:6px 13px;font-size:12px;font-weight:500;border:1px solid var(--gray-border);border-radius:7px;background:var(--white);cursor:pointer;color:var(--text);font-family:'DM Sans',sans-serif}
+  .btn-green{color:var(--green);border-color:#86efac;background:var(--green-light);font-size:11px;padding:5px 11px}
+  .btn-del{color:var(--red);border-color:var(--red-mid);background:var(--red-light);font-size:12px;padding:0;width:32px;height:32px;border-radius:6px;display:flex;align-items:center;justify-content:center}
+  .btn-submit{background:var(--red);color:white;border-color:var(--red);padding:11px 24px;font-size:13px;font-weight:600;width:100%;border-radius:8px;margin-top:.5rem;cursor:pointer;font-family:'DM Sans',sans-serif;border:none}
+  .btn-submit:disabled{background:#94a3b8;cursor:not-allowed;opacity:.6}
+  .val-ok{background:#f0faf4;border-color:#86efac;color:#1a7a4a}
+  .val-warn{background:#fffbeb;border-color:#fcd34d;color:#b45309}
+  .val-err{background:#fdf2f1;border-color:#e8b4b0;color:#C0392B}
+  .btn-submit:hover{background:#a93226}
+  .total-box{background:var(--text);color:white;border-radius:var(--radius);padding:1rem 1.25rem;display:flex;justify-content:space-between;margin-bottom:1rem}
+  .total-label{font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px}
+  .total-val{font-family:'DM Mono',monospace;font-size:22px;font-weight:500}
+  .smsg{display:none;background:var(--green-light);border:1px solid #86efac;border-radius:var(--radius);padding:1rem;text-align:center;color:var(--green);font-weight:600;font-size:13px;margin-top:1rem}
+  .aprov-banner{background:#eff6ff;border:1px solid #93c5fd;border-radius:var(--radius);padding:.85rem 1rem;display:flex;gap:10px;align-items:flex-start;margin-bottom:1.25rem;font-size:12px;color:#1d4ed8}
+  .comp-err{font-size:10px;color:var(--red);margin-top:3px;font-weight:500}
+  .badge{display:inline-block;font-size:10px;font-weight:600;padding:2px 7px;border-radius:5px}
+  .b-p{background:var(--amber-light);color:var(--amber)}
+  .b-c{background:var(--green-light);color:var(--green)}
+  .reg-item{background:var(--white);border:1px solid var(--gray-border);border-radius:8px;padding:.8rem 1rem;margin-bottom:6px;display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+  footer{text-align:center;padding:2rem 1rem;font-size:11px;color:var(--text2)}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">PAN</div>
+  <div>
+    <div class="header-title">Registro de Sobretiempo</div>
+    <div class="header-sub">Panorama BPO · Gerencia Contabilidad · PAN-FO-CON-01/02</div>
+  </div>
+</header>
+<main>
+
+<div class="aprov-banner">
+  <div>🔐</div>
+  <div><strong>Aprobación requerida:</strong> Tu registro quedará en estado <strong>"Pendiente aprobación"</strong> hasta que la Gerencia lo valide. Solo con aprobación se podrá generar el formato RRHH (PDF). Coordina con tu jefe para la revisión.</div>
+</div>
+
+<div class="rule-banner">
+  <div>⏰</div>
+  <div><strong>Regla:</strong> Jornada 8:30 AM – 7:00 PM = <strong>9.5h netas</strong> (incluye 1h refrigerio). Sobretiempo aplica solo si saliste <strong>después de las 8:00 PM</strong>. Las horas se cuentan <strong>desde las 7:00 PM</strong> (fin de jornada) en adelante.</div>
+</div>
+
+<div class="card">
+  <div class="card-title"><span class="num">1</span> Tus datos</div>
+  <div class="g2">
+    <div class="fg"><label>Nombres y apellidos</label><input id="f-nombre" placeholder="Ej: Susan Cuadros Garay"></div>
+    <div class="fg"><label>DNI</label><input id="f-dni" placeholder="41798807" maxlength="8"></div>
+  </div>
+  <div class="g2">
+    <div class="fg"><label>Cargo</label>
+      <select id="f-cargo">
+        <option value="">— Seleccionar cargo —</option>
+        <option>CONTADOR ENCARGADO</option>
+        <option>ANALISTA CONTABLE</option>
+      </select>
+    </div>
+    <div class="fg"><label>Área</label><input id="f-area" value="Contabilidad"></div>
+  </div>
+  <div class="fg"><label>Razón social</label><input id="f-razon" value="Tandem S.A.C." placeholder="Ej: Tandem S.A.C."></div>
+</div>
+
+<div class="card">
+  <div class="card-title"><span class="num">2</span> Periodo de cierre</div>
+  <div class="g2">
+    <div class="fg"><label>Mes</label>
+      <select id="f-mes" onchange="revalidarTodasComps()">
+        <option value="1-2026">Enero 2026</option><option value="2-2026">Febrero 2026</option>
+        <option value="3-2026">Marzo 2026</option><option value="4-2026" selected>Abril 2026</option>
+        <option value="5-2026">Mayo 2026</option><option value="6-2026">Junio 2026</option>
+        <option value="7-2026">Julio 2026</option><option value="8-2026">Agosto 2026</option>
+        <option value="9-2026">Setiembre 2026</option><option value="10-2026">Octubre 2026</option>
+        <option value="11-2026">Noviembre 2026</option><option value="12-2026">Diciembre 2026</option>
+      </select>
+    </div>
+    <div class="fg"><label>Motivo</label>
+      <select id="f-motivo">
+        <option>CIERRE DE EEFF MES</option>
+        <option>CIERRE DE EEFF ANUAL</option>
+        <option>AUDITORIA</option>
+        <option>SOLICITUDES NEGOCIO</option>
+        <option>OTROS</option>
+      </select>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title"><span class="num">3</span> Días de sobretiempo</div>
+  <div style="font-size:11px;color:var(--text2);margin-bottom:.75rem">Ingresa la hora real de salida. Solo se cuentan horas a partir de las 8:00 PM.</div>
+
+  <div class="dia-row" id="d0"><div class="fg" style="margin:0"><label>Fecha</label><input type="date" id="df0" onchange="recalc()"></div><div class="fg" style="margin:0"><label>Hora de salida</label><input type="time" id="dh0" value="20:00" onchange="recalc()"></div><div class="fg" style="margin:0"><label>Horas válidas</label><div class="hauto" id="ha0">—</div></div><button class="btn btn-del" onclick="ocultarDia(0)">✕</button></div>
+  <div class="dia-row oculto" id="d1"><div class="fg" style="margin:0"><label>Fecha</label><input type="date" id="df1" onchange="recalc()"></div><div class="fg" style="margin:0"><label>Hora de salida</label><input type="time" id="dh1" value="20:00" onchange="recalc()"></div><div class="fg" style="margin:0"><label>Horas válidas</label><div class="hauto" id="ha1">—</div></div><button class="btn btn-del" onclick="ocultarDia(1)">✕</button></div>
+  <div class="dia-row oculto" id="d2"><div class="fg" style="margin:0"><label>Fecha</label><input type="date" id="df2" onchange="recalc()"></div><div class="fg" style="margin:0"><label>Hora de salida</label><input type="time" id="dh2" value="20:00" onchange="recalc()"></div><div class="fg" style="margin:0"><label>Horas válidas</label><div class="hauto" id="ha2">—</div></div><button class="btn btn-del" onclick="ocultarDia(2)">✕</button></div>
+  <div class="dia-row oculto" id="d3"><div class="fg" style="margin:0"><label>Fecha</label><input type="date" id="df3" onchange="recalc()"></div><div class="fg" style="margin:0"><label>Hora de salida</label><input type="time" id="dh3" value="20:00" onchange="recalc()"></div><div class="fg" style="margin:0"><label>Horas válidas</label><div class="hauto" id="ha3">—</div></div><button class="btn btn-del" onclick="ocultarDia(3)">✕</button></div>
+  <div class="dia-row oculto" id="d4"><div class="fg" style="margin:0"><label>Fecha</label><input type="date" id="df4" onchange="recalc()"></div><div class="fg" style="margin:0"><label>Hora de salida</label><input type="time" id="dh4" value="20:00" onchange="recalc()"></div><div class="fg" style="margin:0"><label>Horas válidas</label><div class="hauto" id="ha4">—</div></div><button class="btn btn-del" onclick="ocultarDia(4)">✕</button></div>
+  <div class="dia-row oculto" id="d5"><div class="fg" style="margin:0"><label>Fecha</label><input type="date" id="df5" onchange="recalc()"></div><div class="fg" style="margin:0"><label>Hora de salida</label><input type="time" id="dh5" value="20:00" onchange="recalc()"></div><div class="fg" style="margin:0"><label>Horas válidas</label><div class="hauto" id="ha5">—</div></div><button class="btn btn-del" onclick="ocultarDia(5)">✕</button></div>
+  <div class="dia-row oculto" id="d6"><div class="fg" style="margin:0"><label>Fecha</label><input type="date" id="df6" onchange="recalc()"></div><div class="fg" style="margin:0"><label>Hora de salida</label><input type="time" id="dh6" value="20:00" onchange="recalc()"></div><div class="fg" style="margin:0"><label>Horas válidas</label><div class="hauto" id="ha6">—</div></div><button class="btn btn-del" onclick="ocultarDia(6)">✕</button></div>
+  <div class="dia-row oculto" id="d7"><div class="fg" style="margin:0"><label>Fecha</label><input type="date" id="df7" onchange="recalc()"></div><div class="fg" style="margin:0"><label>Hora de salida</label><input type="time" id="dh7" value="20:00" onchange="recalc()"></div><div class="fg" style="margin:0"><label>Horas válidas</label><div class="hauto" id="ha7">—</div></div><button class="btn btn-del" onclick="ocultarDia(7)">✕</button></div>
+  <div class="dia-row oculto" id="d8"><div class="fg" style="margin:0"><label>Fecha</label><input type="date" id="df8" onchange="recalc()"></div><div class="fg" style="margin:0"><label>Hora de salida</label><input type="time" id="dh8" value="20:00" onchange="recalc()"></div><div class="fg" style="margin:0"><label>Horas válidas</label><div class="hauto" id="ha8">—</div></div><button class="btn btn-del" onclick="ocultarDia(8)">✕</button></div>
+  <div class="dia-row oculto" id="d9"><div class="fg" style="margin:0"><label>Fecha</label><input type="date" id="df9" onchange="recalc()"></div><div class="fg" style="margin:0"><label>Hora de salida</label><input type="time" id="dh9" value="20:00" onchange="recalc()"></div><div class="fg" style="margin:0"><label>Horas válidas</label><div class="hauto" id="ha9">—</div></div><button class="btn btn-del" onclick="ocultarDia(9)">✕</button></div>
+
+  <div style="margin-top:.6rem;display:flex;gap:8px;align-items:center">
+    <button class="btn btn-green" id="btn-add-dia" onclick="mostrarDia()">+ Agregar día</button>
+    <span id="max-dias" style="font-size:11px;color:var(--text2);display:none">Máximo 10 días</span>
+  </div>
+</div>
+
+<div class="total-box">
+  <div><div class="total-label">Total horas a compensar</div><div class="total-val" id="total-h">0.00h</div></div>
+  <div style="text-align:right"><div class="total-label">Días válidos (≥ 8PM)</div><div class="total-val" id="total-d">0</div></div>
+</div>
+
+<div class="card">
+  <div class="card-title"><span class="num">4</span> Fechas de compensación acordadas</div>
+  <div style="font-size:11px;color:var(--text2);margin-bottom:.75rem">Coordina con tu jefe las fechas y horarios en que tomarás tu descanso compensatorio.</div>
+
+  <div class="comp-row" id="c0"><div class="fg" style="margin:0"><label>Fecha comp.</label><input type="date" id="cf0" onchange="validarMesComp(0)"><span class="comp-err" id="ce0"></span></div><div class="fg" style="margin:0"><label>Desde</label><input type="time" id="ci0" value="14:00" onchange="autoHorasComp(0)"></div><div class="fg" style="margin:0"><label>Hasta</label><input type="time" id="cn0" value="19:00" onchange="autoHorasComp(0)"></div><div class="fg" style="margin:0"><label>Horas (auto)</label><div id="ch0" style="font-family:DM Mono,monospace;font-size:12px;font-weight:600;padding:8px 10px;border-radius:7px;background:#f0faf4;border:1px solid #86efac;color:#1a7a4a;min-height:37px;display:flex;align-items:center">—</div></div><button class="btn btn-del" onclick="ocultarComp(0)">✕</button></div>
+  <div class="comp-row oculto" id="c1"><div class="fg" style="margin:0"><label>Fecha comp.</label><input type="date" id="cf1" onchange="validarMesComp(1)"><span class="comp-err" id="ce1"></span></div><div class="fg" style="margin:0"><label>Desde</label><input type="time" id="ci1" value="14:00" onchange="autoHorasComp(1)"></div><div class="fg" style="margin:0"><label>Hasta</label><input type="time" id="cn1" value="19:00" onchange="autoHorasComp(1)"></div><div class="fg" style="margin:0"><label>Horas (auto)</label><div id="ch1" style="font-family:DM Mono,monospace;font-size:12px;font-weight:600;padding:8px 10px;border-radius:7px;background:#f0faf4;border:1px solid #86efac;color:#1a7a4a;min-height:37px;display:flex;align-items:center">—</div></div><button class="btn btn-del" onclick="ocultarComp(1)">✕</button></div>
+  <div class="comp-row oculto" id="c2"><div class="fg" style="margin:0"><label>Fecha comp.</label><input type="date" id="cf2" onchange="validarMesComp(2)"><span class="comp-err" id="ce2"></span></div><div class="fg" style="margin:0"><label>Desde</label><input type="time" id="ci2" value="14:00" onchange="autoHorasComp(2)"></div><div class="fg" style="margin:0"><label>Hasta</label><input type="time" id="cn2" value="19:00" onchange="autoHorasComp(2)"></div><div class="fg" style="margin:0"><label>Horas (auto)</label><div id="ch2" style="font-family:DM Mono,monospace;font-size:12px;font-weight:600;padding:8px 10px;border-radius:7px;background:#f0faf4;border:1px solid #86efac;color:#1a7a4a;min-height:37px;display:flex;align-items:center">—</div></div><button class="btn btn-del" onclick="ocultarComp(2)">✕</button></div>
+  <div class="comp-row oculto" id="c3"><div class="fg" style="margin:0"><label>Fecha comp.</label><input type="date" id="cf3" onchange="validarMesComp(3)"><span class="comp-err" id="ce3"></span></div><div class="fg" style="margin:0"><label>Desde</label><input type="time" id="ci3" value="14:00" onchange="autoHorasComp(3)"></div><div class="fg" style="margin:0"><label>Hasta</label><input type="time" id="cn3" value="19:00" onchange="autoHorasComp(3)"></div><div class="fg" style="margin:0"><label>Horas (auto)</label><div id="ch3" style="font-family:DM Mono,monospace;font-size:12px;font-weight:600;padding:8px 10px;border-radius:7px;background:#f0faf4;border:1px solid #86efac;color:#1a7a4a;min-height:37px;display:flex;align-items:center">—</div></div><button class="btn btn-del" onclick="ocultarComp(3)">✕</button></div>
+  <div class="comp-row oculto" id="c4"><div class="fg" style="margin:0"><label>Fecha comp.</label><input type="date" id="cf4" onchange="validarMesComp(4)"><span class="comp-err" id="ce4"></span></div><div class="fg" style="margin:0"><label>Desde</label><input type="time" id="ci4" value="14:00" onchange="autoHorasComp(4)"></div><div class="fg" style="margin:0"><label>Hasta</label><input type="time" id="cn4" value="19:00" onchange="autoHorasComp(4)"></div><div class="fg" style="margin:0"><label>Horas (auto)</label><div id="ch4" style="font-family:DM Mono,monospace;font-size:12px;font-weight:600;padding:8px 10px;border-radius:7px;background:#f0faf4;border:1px solid #86efac;color:#1a7a4a;min-height:37px;display:flex;align-items:center">—</div></div><button class="btn btn-del" onclick="ocultarComp(4)">✕</button></div>
+  <div class="comp-row oculto" id="c5"><div class="fg" style="margin:0"><label>Fecha comp.</label><input type="date" id="cf5" onchange="validarMesComp(5)"><span class="comp-err" id="ce5"></span></div><div class="fg" style="margin:0"><label>Desde</label><input type="time" id="ci5" value="14:00" onchange="autoHorasComp(5)"></div><div class="fg" style="margin:0"><label>Hasta</label><input type="time" id="cn5" value="19:00" onchange="autoHorasComp(5)"></div><div class="fg" style="margin:0"><label>Horas (auto)</label><div id="ch5" style="font-family:DM Mono,monospace;font-size:12px;font-weight:600;padding:8px 10px;border-radius:7px;background:#f0faf4;border:1px solid #86efac;color:#1a7a4a;min-height:37px;display:flex;align-items:center">—</div></div><button class="btn btn-del" onclick="ocultarComp(5)">✕</button></div>
+  <div class="comp-row oculto" id="c6"><div class="fg" style="margin:0"><label>Fecha comp.</label><input type="date" id="cf6" onchange="validarMesComp(6)"><span class="comp-err" id="ce6"></span></div><div class="fg" style="margin:0"><label>Desde</label><input type="time" id="ci6" value="14:00" onchange="autoHorasComp(6)"></div><div class="fg" style="margin:0"><label>Hasta</label><input type="time" id="cn6" value="19:00" onchange="autoHorasComp(6)"></div><div class="fg" style="margin:0"><label>Horas (auto)</label><div id="ch6" style="font-family:DM Mono,monospace;font-size:12px;font-weight:600;padding:8px 10px;border-radius:7px;background:#f0faf4;border:1px solid #86efac;color:#1a7a4a;min-height:37px;display:flex;align-items:center">—</div></div><button class="btn btn-del" onclick="ocultarComp(6)">✕</button></div>
+  <div class="comp-row oculto" id="c7"><div class="fg" style="margin:0"><label>Fecha comp.</label><input type="date" id="cf7" onchange="validarMesComp(7)"><span class="comp-err" id="ce7"></span></div><div class="fg" style="margin:0"><label>Desde</label><input type="time" id="ci7" value="14:00" onchange="autoHorasComp(7)"></div><div class="fg" style="margin:0"><label>Hasta</label><input type="time" id="cn7" value="19:00" onchange="autoHorasComp(7)"></div><div class="fg" style="margin:0"><label>Horas (auto)</label><div id="ch7" style="font-family:DM Mono,monospace;font-size:12px;font-weight:600;padding:8px 10px;border-radius:7px;background:#f0faf4;border:1px solid #86efac;color:#1a7a4a;min-height:37px;display:flex;align-items:center">—</div></div><button class="btn btn-del" onclick="ocultarComp(7)">✕</button></div>
+
+  <div style="margin-top:.6rem;display:flex;gap:8px;align-items:center">
+    <button class="btn btn-green" id="btn-add-comp" onclick="mostrarComp()">+ Agregar fecha</button>
+    <span id="max-comp" style="font-size:11px;color:var(--text2);display:none">Máximo 8 fechas</span>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title"><span class="num">5</span> Observaciones</div>
+  <div class="fg" style="margin-bottom:0"><label>Comentarios adicionales (opcional)</label><textarea id="f-obs" placeholder="Detalla el trabajo realizado..."></textarea></div>
+</div>
+
+<div id="val-box" style="border-radius:10px;padding:.9rem 1.1rem;margin-bottom:.75rem;font-size:13px;font-weight:500;display:flex;justify-content:space-between;align-items:center;border:1px solid #e2e8f0;background:#f8fafc;color:#64748b">
+  <span id="val-msg">Completa los días y las compensaciones para validar.</span>
+  <span id="val-nums" style="font-family:DM Mono,monospace;font-size:12px;font-weight:600;margin-left:12px;white-space:nowrap"></span>
+</div>
+<button class="btn-submit" id="btn-enviar" onclick="guardar()" disabled>Enviar registro ↗</button>
+<div class="smsg" id="smsg">✓ Registro enviado correctamente. Queda en estado <strong>Pendiente aprobación</strong> hasta que la Gerencia lo revise. Solo con aprobación se genera el PDF.</div>
+
+<div id="mis-sec" style="display:none;margin-top:1.5rem">
+  <div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:.6rem;text-transform:uppercase;letter-spacing:.04em">Tus registros guardados</div>
+  <div id="mis-list"></div>
+</div>
+
+</main>
+<footer>Panorama BPO · PAN-FO-CON-01/02 · v3.0</footer>
+
+<script>
+var KEY = 'panorama_sobretiempo_v1';
+var diasVis = [0];
+var compsVis = [0];
+
+function revalidarTodasComps() {
+  for (var j=0;j<8;j++) { if(compsVis.indexOf(j)!==-1) validarMesComp(j); }
+  recalc();
+}
+
+// Obtiene el mes/año del periodo seleccionado
+function getMesPeriodo() {
+  var v = document.getElementById('f-mes').value;
+  if (!v) return null;
+  var p = v.split('-'); return { m: parseInt(p[0]), y: parseInt(p[1]) };
+}
+
+// Obtiene el mes/año más temprano de los días de sobretiempo ingresados
+// Si no hay días ingresados, cae al periodo seleccionado
+function getMesDesdeOT() {
+  var fechas = [];
+  for (var i = 0; i < 10; i++) {
+    if (diasVis.indexOf(i) === -1) continue;
+    var f = document.getElementById('df'+i).value;
+    if (f) fechas.push(f);
+  }
+  if (!fechas.length) return getMesPeriodo();
+  // Usar la fecha más temprana de OT como referencia del mes
+  fechas.sort();
+  var p = fechas[0].split('-');
+  return { m: parseInt(p[1]), y: parseInt(p[0]) };
+}
+
+// Devuelve nombre legible del mes/año
+function mesLblFromObj(obj) {
+  if (!obj) return '';
+  var ms = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Setiembre','Octubre','Noviembre','Diciembre'];
+  return ms[obj.m] + ' ' + obj.y;
+}
+
+// Valida que la fecha de compensación:
+// 1. Esté dentro del mismo mes que las fechas de sobretiempo
+// 2. No sea anterior a hoy (no puede programar compensación en el pasado)
+function validarMesComp(i) {
+  var fecha = document.getElementById('cf'+i).value;
+  var err   = document.getElementById('ce'+i);
+  var inp   = document.getElementById('cf'+i);
+  if (!fecha || !err) { validar(); return; }
+
+  // Validar que no sea fecha pasada
+  var hoy = new Date(); hoy.setHours(0,0,0,0);
+  var fComp = new Date(fecha + 'T00:00:00');
+  if (fComp < hoy) {
+    err.textContent = '⚠ No puedes programar compensación en una fecha pasada.';
+    inp.style.borderColor = 'var(--red)';
+    validar(); return;
+  }
+
+  // Validar que sea dentro del mismo mes de las fechas OT
+  var per = getMesDesdeOT();
+  if (!per) { err.textContent=''; inp.style.borderColor=''; validar(); return; }
+  var p = fecha.split('-');
+  var fm = parseInt(p[1]), fy = parseInt(p[0]);
+  if (fm !== per.m || fy !== per.y) {
+    err.textContent = '⚠ Debe ser dentro de ' + mesLblFromObj(per);
+    inp.style.borderColor = 'var(--red)';
+  } else {
+    err.textContent = '';
+    inp.style.borderColor = '';
+  }
+  validar();
+}
+
+// Verifica que todas las fechas de comp visibles sean válidas
+function hayErrorMes() {
+  var hoy = new Date(); hoy.setHours(0,0,0,0);
+  for (var j = 0; j < 8; j++) {
+    if (compsVis.indexOf(j) === -1) continue;
+    var fecha = document.getElementById('cf'+j).value;
+    if (!fecha) continue;
+    // No permitir fechas pasadas
+    var fComp = new Date(fecha + 'T00:00:00');
+    if (fComp < hoy) return true;
+    // Verificar mismo mes que OT
+    var per = getMesDesdeOT();
+    if (!per) continue;
+    var p = fecha.split('-');
+    if (parseInt(p[1]) !== per.m || parseInt(p[0]) !== per.y) return true;
+  }
+  return false;
+}
+
+function calcH(t) {
+  if (!t) return 0;
+  var p = t.split(':'); var h = +p[0]; var m = +p[1];
+  var min = h*60+m;
+  // Solo aplica si salida es ESTRICTAMENTE después de las 8:00 PM (>1200 min)
+  // Las horas se cuentan desde las 7:00 PM (1140 min) = hora real de fin de jornada
+  if (min <= 1200) return 0;
+  return Math.round((min-1140)/60*100)/100;
+}
+
+function mostrarDia() {
+  for (var i = 0; i < 10; i++) {
+    if (diasVis.indexOf(i) === -1) {
+      diasVis.push(i);
+      document.getElementById('d'+i).classList.remove('oculto');
+      document.getElementById('df'+i).value = '';
+      document.getElementById('dh'+i).value = '20:00';
+      document.getElementById('ha'+i).textContent = '—';
+      document.getElementById('ha'+i).className = 'hauto';
+      if (diasVis.length >= 10) {
+        document.getElementById('btn-add-dia').style.display = 'none';
+        document.getElementById('max-dias').style.display = 'inline';
+      }
+      recalc();
+      return;
+    }
+  }
+}
+
+function ocultarDia(i) {
+  if (diasVis.length <= 1) return;
+  diasVis.splice(diasVis.indexOf(i), 1);
+  document.getElementById('d'+i).classList.add('oculto');
+  document.getElementById('df'+i).value = '';
+  document.getElementById('btn-add-dia').style.display = 'inline-block';
+  document.getElementById('max-dias').style.display = 'none';
+  recalc();
+}
+
+function mostrarComp() {
+  for (var i = 0; i < 8; i++) {
+    if (compsVis.indexOf(i) === -1) {
+      compsVis.push(i);
+      document.getElementById('c'+i).classList.remove('oculto');
+      document.getElementById('cf'+i).value = '';
+      document.getElementById('ci'+i).value = '14:00';
+      document.getElementById('cn'+i).value = '19:00';
+      var chR = document.getElementById('ch'+i);
+      chR.textContent = '—'; chR.setAttribute('data-h','0');
+      if (compsVis.length >= 8) {
+        document.getElementById('btn-add-comp').style.display = 'none';
+        document.getElementById('max-comp').style.display = 'inline';
+      }
+      return;
+    }
+  }
+}
+
+function ocultarComp(i) {
+  if (compsVis.length <= 1) return;
+  compsVis.splice(compsVis.indexOf(i), 1);
+  document.getElementById('c'+i).classList.add('oculto');
+  document.getElementById('btn-add-comp').style.display = 'inline-block';
+  document.getElementById('max-comp').style.display = 'none';
+}
+
+// Calcula horas entre Desde y Hasta y las pone en el campo Horas
+function autoHorasComp(i) {
+  var ini = document.getElementById('ci'+i).value;
+  var fin = document.getElementById('cn'+i).value;
+  var el  = document.getElementById('ch'+i);
+  if (!ini || !fin) { el.textContent = '—'; el.setAttribute('data-h','0'); validar(); return; }
+  var pi = ini.split(':'); var pf = fin.split(':');
+  var minI = +pi[0]*60 + +pi[1];
+  var minF = +pf[0]*60 + +pf[1];
+  if (minF <= minI) { el.textContent = '—'; el.setAttribute('data-h','0'); validar(); return; }
+  var h = Math.round((minF - minI) / 60 * 100) / 100;
+  // Descontar 1h de refrigerio si el rango cubre el horario 1:00 PM – 2:00 PM (780–840 min)
+  var refIni = 780, refFin = 840; // 13:00 – 14:00
+  var descuento = false;
+  if (minI < refFin && minF > refIni) {
+    // El rango solapa con el refrigerio → descontar 1h
+    h = Math.round((h - 1) * 100) / 100;
+    descuento = true;
+  }
+  if (h <= 0) { el.textContent = '—'; el.setAttribute('data-h','0'); validar(); return; }
+  el.textContent = h.toFixed(2) + 'h';
+  el.setAttribute('data-h', h);
+  validar();
+}
+
+function recalc() {
+  var total = 0; var validos = 0;
+  for (var i = 0; i < 10; i++) {
+    if (diasVis.indexOf(i) === -1) continue;
+    var t = document.getElementById('dh'+i).value;
+    var hv = calcH(t);
+    var el = document.getElementById('ha'+i);
+    if (!t) { el.textContent = '—'; el.className = 'hauto'; continue; }
+    if (hv <= 0) { el.textContent = 'No aplica (antes de 8PM)'; el.className = 'hauto no'; }
+    else { el.textContent = '+' + hv.toFixed(2) + 'h'; el.className = 'hauto ok'; total += hv; validos++; }
+  }
+  document.getElementById('total-h').textContent = total.toFixed(2) + 'h';
+  document.getElementById('total-d').textContent = validos;
+  // Revalidar fechas de compensación cuando cambian los días OT (el mes de referencia puede cambiar)
+  for (var j = 0; j < 8; j++) {
+    if (compsVis.indexOf(j) !== -1 && document.getElementById('cf'+j).value) {
+      validarMesComp(j);
+    }
+  }
+  validar();
+}
+
+
+function totComp() {
+  var t = 0;
+  for (var j=0;j<8;j++) {
+    if (compsVis.indexOf(j)===-1) continue;
+    t += parseFloat(document.getElementById('ch'+j).getAttribute('data-h'))||0;
+  }
+  return Math.round(t*100)/100;
+}
+
+function validar() {
+  var ot = 0;
+  for (var i=0;i<10;i++) {
+    if (diasVis.indexOf(i)===-1) continue;
+    ot += calcH(document.getElementById('dh'+i).value||'');
+  }
+  ot = Math.round(ot*100)/100;
+  var comp = totComp();
+  var diff = Math.round((comp - ot)*100)/100;
+  var box  = document.getElementById('val-box');
+  var msg  = document.getElementById('val-msg');
+  var nums = document.getElementById('val-nums');
+  var btn  = document.getElementById('btn-enviar');
+  nums.textContent = 'OT: ' + ot.toFixed(2) + 'h   Comp: ' + comp.toFixed(2) + 'h';
+  if (ot === 0) {
+    box.className=''; box.style.background='#f8fafc'; box.style.borderColor='#e2e8f0'; box.style.color='#64748b';
+    msg.textContent='Completa los días y las compensaciones para validar.';
+    btn.disabled=true; btn.style.opacity='.4'; btn.style.cursor='not-allowed'; return;
+  }
+  if (Math.abs(diff) <= 0.05) {
+    // Revisar errores de mes antes de habilitar
+    if (hayErrorMes()) {
+      box.style.background='#fdf2f1'; box.style.borderColor='#e8b4b0'; box.style.color='#C0392B';
+      msg.textContent='✕ Una o más fechas de compensación están fuera del mes del sobretiempo.';
+      btn.disabled=true; btn.style.opacity='.4'; btn.style.cursor='not-allowed';
+      return;
+    }
+    box.style.background='#f0faf4'; box.style.borderColor='#86efac'; box.style.color='#1a7a4a';
+    var difMsg = Math.abs(diff) > 0 ? ' (diferencia de ' + Math.abs(diff).toFixed(2) + 'h dentro del margen ±0.05h permitido)' : '';
+    msg.textContent='✓ Horas de compensación válidas' + difMsg + '. Puedes enviar.';
+    btn.disabled=false; btn.style.opacity='1'; btn.style.cursor='pointer';
+  } else if (diff < 0) {
+    box.style.background='#fffbeb'; box.style.borderColor='#fcd34d'; box.style.color='#b45309';
+    msg.textContent='⚠ Faltan ' + Math.abs(diff).toFixed(2) + 'h por programar en compensación. (Tolerancia máx. ±0.05h)';
+    btn.disabled=true; btn.style.opacity='.4'; btn.style.cursor='not-allowed';
+  } else {
+    box.style.background='#fdf2f1'; box.style.borderColor='#e8b4b0'; box.style.color='#C0392B';
+    msg.textContent='✕ Excediste ' + diff.toFixed(2) + 'h sobre el sobretiempo registrado. (Tolerancia máx. ±0.05h)';
+    btn.disabled=true; btn.style.opacity='.4'; btn.style.cursor='not-allowed';
+  }
+}
+
+function fD(iso) { if (!iso) return ''; var p=iso.split('-'); return p[2]+'/'+p[1]+'/'+p[0]; }
+function mesLbl(k) {
+  var ms=['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Setiembre','Octubre','Noviembre','Diciembre'];
+  var p=k.split('-'); return ms[+p[0]]+' '+p[1];
+}
+
+var API_URL = 'https://script.google.com/macros/s/AKfycbzyt0FpqxvCcjgPzA8mv8z0vwKewwrxzQUh3EvEoQ75DEgkl-LNP61STkcq8FMfXFxq/exec';
+var LS_KEY = 'panorama_sobretiempo_v1';
+
+// Lee: primero intenta Google Sheets, si falla usa localStorage
+function ldData(cb) {
+  fetch(API_URL, {redirect:'follow'})
+    .then(function(r){ return r.text(); })
+    .then(function(t){
+      try {
+        var d = JSON.parse(t);
+        if (Array.isArray(d) && d.length > 0) {
+          localStorage.setItem(LS_KEY, JSON.stringify(d)); // sincroniza local
+          cb(d);
+        } else {
+          // Sheets vacío, usar localStorage
+          cb(_lsLoad());
+        }
+      } catch(e){ cb(_lsLoad()); }
+    })
+    .catch(function(){ cb(_lsLoad()); });
+}
+
+// Guarda: siempre en localStorage primero (instantáneo), luego intenta Sheets
+function svData(d, cb) {
+  localStorage.setItem(LS_KEY, JSON.stringify(d)); // guardar local inmediato
+  if (cb) cb(); // callback inmediato para que el resumen aparezca ya
+  // intentar sync a Sheets en segundo plano
+  fetch(API_URL, {
+    method:'POST', redirect:'follow',
+    headers:{'Content-Type':'text/plain'},
+    body: JSON.stringify(d)
+  }).catch(function(){});
+}
+
+function _lsLoad() {
+  try { return JSON.parse(localStorage.getItem(LS_KEY)||'[]'); } catch(e){ return []; }
+}
+
+function guardar() {
+  var nombre = document.getElementById('f-nombre').value.trim();
+  var cargo  = document.getElementById('f-cargo').value.trim();
+  if (!nombre || !cargo) { alert('Completa tu nombre y cargo.'); return; }
+  var dni   = document.getElementById('f-dni').value.trim();
+  var area  = document.getElementById('f-area').value.trim();
+  var razon = document.getElementById('f-razon').value.trim() || 'Tandem S.A.C.';
+  var motivo= document.getElementById('f-motivo').value;
+  var mes   = document.getElementById('f-mes').value;
+  var obs   = document.getElementById('f-obs').value.trim();
+  var dias  = [];
+  for (var i=0;i<10;i++) {
+    if (diasVis.indexOf(i)===-1) continue;
+    var fecha   = document.getElementById('df'+i).value;
+    var hsalida = document.getElementById('dh'+i).value;
+    var hv      = calcH(hsalida);
+    if (fecha) dias.push({fecha:fecha,hsalida:hsalida,hv:hv});
+  }
+  if (!dias.length) { alert('Agrega al menos un día de sobretiempo.'); return; }
+  var hTotChk = 0; for (var ci=0;ci<dias.length;ci++) hTotChk+=dias[ci].hv; hTotChk=Math.round(hTotChk*100)/100;
+  var cTotChk = 0; for (var cj=0;cj<8;cj++) { if(compsVis.indexOf(cj)===-1) continue; cTotChk+=parseFloat(document.getElementById('ch'+cj).getAttribute('data-h'))||0; } cTotChk=Math.round(cTotChk*100)/100;
+  if (Math.abs(cTotChk-hTotChk)>0.05) { alert('La diferencia entre compensación (' + cTotChk.toFixed(2) + 'h) y sobretiempo (' + hTotChk.toFixed(2) + 'h) supera el margen permitido de ±0.05h.'); return; }
+  if (hayErrorMes()) { alert('Una o más fechas de compensación están fuera del mes del sobretiempo. Corrígelas antes de enviar.'); return; }
+  var comps = [];
+  for (var j=0;j<8;j++) {
+    if (compsVis.indexOf(j)===-1) continue;
+    var f2   = document.getElementById('cf'+j).value;
+    var hini = document.getElementById('ci'+j).value;
+    var hfin = document.getElementById('cn'+j).value;
+    var hrs  = parseFloat(document.getElementById('ch'+j).getAttribute('data-h'))||0;
+    if (f2) comps.push({fecha:f2,hini:hini,hfin:hfin,horas:hrs});
+  }
+  var hTot = 0;
+  for (var k=0;k<dias.length;k++) hTot+=dias[k].hv;
+  hTot = Math.round(hTot*100)/100;
+  var hoy = new Date();
+  var reg = {id:Date.now(),nombre:nombre,dni:dni,cargo:cargo,area:area,razon:razon,
+    motivo:motivo,mes:mes,obs:obs,fechaEmision:fD(hoy.toISOString().split('T')[0]),
+    dias:dias,comps:comps,horasValidas:hTot,estado:'aprobacion_pendiente',ts:hoy.toISOString()};
+
+  var btn = document.getElementById('btn-enviar');
+  btn.disabled=true; btn.textContent='Guardando...';
+
+  ldData(function(data) {
+    var idx = -1;
+    for (var x=0;x<data.length;x++) { if(data[x].nombre===nombre&&data[x].mes===mes){idx=x;break;} }
+    if (idx>=0) data[idx]=reg; else data.push(reg);
+    svData(data, function() {
+      btn.disabled=false; btn.textContent='Enviar registro ↗';
+      var msgEl = document.getElementById('smsg');
+      msgEl.style.display = 'block';
+      setTimeout(function(){ msgEl.style.display='none'; }, 4000);
+      renderMis();
+    });
+  });
+}
+
+function renderMis() {
+  var n = document.getElementById('f-nombre').value.trim();
+  if (!n) return;
+  var p = n.split(' ')[0].toLowerCase();
+  ldData(function(data) {
+    var res = [];
+    for (var i=0;i<data.length;i++) { if(data[i].nombre.toLowerCase().indexOf(p)===0) res.push(data[i]); }
+    if (!res.length) return;
+    document.getElementById('mis-sec').style.display = 'block';
+    var html = '';
+    for (var j=0;j<res.length;j++) {
+      var r=res[j]; var cs='';
+      for (var k=0;k<r.comps.length;k++) cs+=fD(r.comps[k].fecha)+' '+r.comps[k].hini+'–'+r.comps[k].hfin+' ('+r.comps[k].horas+'h) ';
+      var estadoLbl = r.estado==='compensado'?'Compensado':r.estado==='aprobado'?'Aprobado':r.estado==='aprobacion_pendiente'?'⏳ Pend. aprobación':'Pendiente';
+      var estadoCls = r.estado==='compensado'?'b-c':r.estado==='aprobado'?'b-c':'b-p';
+      html+='<div class="reg-item"><div>'+
+        '<div style="font-size:13px;font-weight:600">'+r.nombre+' <span style="font-size:11px;color:var(--text2);font-weight:400">· '+mesLbl(r.mes)+'</span></div>'+
+        '<div style="font-size:11px;color:var(--text2);margin-top:2px">'+r.motivo+' · '+r.dias.length+' día(s) · <strong>'+r.horasValidas.toFixed(2)+'h</strong></div>'+
+        '<div style="font-size:11px;color:var(--text2)">Comp: '+(cs||'—')+'</div>'+
+        '</div><span class="badge '+estadoCls+'">'+estadoLbl+'</span></div>';
+    }
+    document.getElementById('mis-list').innerHTML = html;
+  });
+}
+// Inicializar horas de compensación al cargar (calcula desde Desde/Hasta por defecto)
+for (var _i=0; _i<8; _i++) { autoHorasComp(_i); }
+</script>
+</body>
+</html>
