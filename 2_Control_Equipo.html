@@ -143,6 +143,13 @@ function fD(iso){if(!iso)return'';const[y,m,d]=iso.split('-');return`${d}/${m}/$
 function mesLabel(k){const ms=['','Enero','Feb','Mar','Abr','May','Jun','Jul','Ago','Set','Oct','Nov','Dic'];const[m,y]=k.split('-');return`${ms[parseInt(m)]} ${y}`;}
 function mesLabelFull(k){const ms=['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Setiembre','Octubre','Noviembre','Diciembre'];const[m,y]=k.split('-');return`${ms[parseInt(m)]} ${y}`;}
 
+function barColor(i,n){
+  if(i===0)return'#C0392B';
+  if(i===1)return'#e07b5f';
+  if(i<Math.ceil(n*.4))return'#f59e0b';
+  return'#94a3b8';
+}
+
 function filtrar(data){
   const mes=document.getElementById('sel-mes').value;
   return mes?data.filter(r=>r.mes===mes):data;
@@ -270,7 +277,6 @@ function limpiarDemo(){
 
 
 renderAll();
-setInterval(renderAll,15000);
 setInterval(renderAll,15000);
 </script>
 </body>
