@@ -77,7 +77,7 @@
 
 <div class="rule-banner">
   <div>⏰</div>
-  <div><strong>Regla:</strong> Jornada 8:30 AM – 7:00 PM = <strong>9.5h netas</strong> (incluye 1h refrigerio). Sobretiempo aplica solo si saliste <strong>después de las 8:00 PM</strong>. Las horas se cuentan <strong>desde las 7:00 PM</strong> (fin de jornada) en adelante.</div>
+  <div><strong>Regla:</strong> Jornada 8:30 AM – 7:00 PM = <strong>9.5h netas</strong> (incluye 1h refrigerio). Sobretiempo aplica solo si saliste <strong>después de las 8:00 PM</strong>. Las horas se cuentan <strong>desde las 7:00 PM</strong>. La compensación debe tomarse en el <strong>mes siguiente</strong> al sobretiempo.</div>
 </div>
 
 <div class="card">
@@ -222,6 +222,16 @@ function getMesDesdeOT() {
   return { m: parseInt(p[1]), y: parseInt(p[0]) };
 }
 
+// Obtiene el mes siguiente al mes de las fechas OT (mes de compensación permitido)
+function getMesCompPermitido() {
+  var per = getMesDesdeOT();
+  if (!per) return null;
+  var m = per.m + 1;
+  var y = per.y;
+  if (m > 12) { m = 1; y++; }
+  return { m: m, y: y };
+}
+
 // Devuelve nombre legible del mes/año
 function mesLblFromObj(obj) {
   if (!obj) return '';
@@ -230,8 +240,8 @@ function mesLblFromObj(obj) {
 }
 
 // Valida que la fecha de compensación:
-// 1. Esté dentro del mismo mes que las fechas de sobretiempo
-// 2. No sea anterior a hoy (no puede programar compensación en el pasado)
+// 1. Esté dentro del mes SIGUIENTE al mes de las fechas de sobretiempo
+// 2. No sea anterior a hoy
 function validarMesComp(i) {
   var fecha = document.getElementById('cf'+i).value;
   var err   = document.getElementById('ce'+i);
@@ -247,8 +257,8 @@ function validarMesComp(i) {
     validar(); return;
   }
 
-  // Validar que sea dentro del mismo mes de las fechas OT
-  var per = getMesDesdeOT();
+  // Validar que sea dentro del mes siguiente al mes OT
+  var per = getMesCompPermitido();
   if (!per) { err.textContent=''; inp.style.borderColor=''; validar(); return; }
   var p = fecha.split('-');
   var fm = parseInt(p[1]), fy = parseInt(p[0]);
@@ -269,11 +279,9 @@ function hayErrorMes() {
     if (compsVis.indexOf(j) === -1) continue;
     var fecha = document.getElementById('cf'+j).value;
     if (!fecha) continue;
-    // No permitir fechas pasadas
     var fComp = new Date(fecha + 'T00:00:00');
     if (fComp < hoy) return true;
-    // Verificar mismo mes que OT
-    var per = getMesDesdeOT();
+    var per = getMesCompPermitido();
     if (!per) continue;
     var p = fecha.split('-');
     if (parseInt(p[1]) !== per.m || parseInt(p[0]) !== per.y) return true;
