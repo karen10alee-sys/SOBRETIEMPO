@@ -541,18 +541,54 @@ function guardar() {
   var btn = document.getElementById('btn-enviar');
   btn.disabled=true; btn.textContent='Guardando...';
 
-  ldData(function(data) {
-    var idx = -1;
-    for (var x=0;x<data.length;x++) { if(data[x].nombre===nombre&&data[x].mes===mes){idx=x;break;} }
-    if (idx>=0) data[idx]=reg; else data.push(reg);
-    svData(data, function() {
+  // Siempre leer desde Sheets primero para no perder registros de otros
+  fetch(API_URL, {redirect:'follow'})
+    .then(function(r){ return r.text(); })
+    .then(function(t){
+      var data = [];
+      try { var d = JSON.parse(t); if(Array.isArray(d)) data = d; } catch(e){}
+      // Si Sheets está vacío, usar localStorage como respaldo
+      if (!data.length) {
+        try { data = JSON.parse(localStorage.getItem(LS_KEY)||'[]'); } catch(e){ data = []; }
+      }
+      var idx = -1;
+      for (var x=0;x<data.length;x++) { if(data[x].nombre===nombre&&data[x].mes===mes){idx=x;break;} }
+      if (idx>=0) data[idx]=reg; else data.push(reg);
+      // Guardar en localStorage local
+      localStorage.setItem(LS_KEY, JSON.stringify(data));
+      // Guardar en Sheets
+      fetch(API_URL, {
+        method:'POST', redirect:'follow',
+        headers:{'Content-Type':'text/plain'},
+        body: JSON.stringify(data)
+      }).then(function(){
+        btn.disabled=false; btn.textContent='Enviar registro ↗';
+        var msgEl = document.getElementById('smsg');
+        msgEl.style.display = 'block';
+        setTimeout(function(){ msgEl.style.display='none'; }, 4000);
+        renderMis();
+      }).catch(function(){
+        btn.disabled=false; btn.textContent='Enviar registro ↗';
+        var msgEl = document.getElementById('smsg');
+        msgEl.style.display = 'block';
+        setTimeout(function(){ msgEl.style.display='none'; }, 4000);
+        renderMis();
+      });
+    })
+    .catch(function(){
+      // Si falla la lectura, guardar solo localmente
+      var data = [];
+      try { data = JSON.parse(localStorage.getItem(LS_KEY)||'[]'); } catch(e){}
+      var idx = -1;
+      for (var x=0;x<data.length;x++) { if(data[x].nombre===nombre&&data[x].mes===mes){idx=x;break;} }
+      if (idx>=0) data[idx]=reg; else data.push(reg);
+      localStorage.setItem(LS_KEY, JSON.stringify(data));
       btn.disabled=false; btn.textContent='Enviar registro ↗';
       var msgEl = document.getElementById('smsg');
       msgEl.style.display = 'block';
       setTimeout(function(){ msgEl.style.display='none'; }, 4000);
       renderMis();
     });
-  });
 }
 
 function renderMis() {
